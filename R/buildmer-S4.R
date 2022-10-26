@@ -59,16 +59,7 @@ anova.buildmer <- function (object,...) try({
 	if (any(names(object@model) == 'gam')) return(stats::anova(object@model$gam))
 	if (!inherits(object@model,'merMod')) return(stats::anova(object@model))
 
-	ddf <- check.ddf(ddf)
-	if (!inherits(object@model,'lmerMod') && !ddf %in% c('Wald','lme4') && object@p$family$family %in% c('binomial','poisson')) {
-		warning('Denominator degrees of freedom do not apply to binomial or Poisson models, as those models have a known scale parameter; returning exact ddf instead')
-		ddf <- 'lme4'
-	}
-	if (ddf == 'Kenward-Roger' && !inherits(object@model,'lmerMod')) {
-		warning('Kenward-Roger denominator degrees of freedom are only available for *linear* mixed models; returning Wald ddf instead')
-		ddf <- 'Wald'
-	}
-
+	ddf <- check.ddf(object@model,ddf)
 	if (is.null(type)) type <- 3
 	if (ddf %in% c('Wald','lme4')) {
 		table <- if (inherits(object@model,'lmerModLmerTest')) stats::anova(object@model,ddf='lme4',type=type) else stats::anova(object@model)
@@ -93,16 +84,10 @@ summary.buildmer <- function (object,...) try({
 	ddf <- dots$ddf
 	if (!is.null(ddf) && !inherits(object@model,'merMod') && !object@p$in.buildmer) warning("Ignoring 'ddf' specification as this is not an lme4 linear mixed model")
 	if (!is.null(object@summary) && is.null(ddf)) return(object@summary)
-	if (inherits(object@model,'JuliaObject')) return(object@model)
 	if (any(names(object@model) == 'gam')) return(summary(object@model$gam))
 	if (!inherits(object@model,'merMod')) return(summary(object@model))
 
-	ddf <- check.ddf(ddf)
-	if (!inherits(object@model,'lmerMod') && !ddf %in% c('Wald','lme4')) {
-		warning('Requested denominator degrees of freedom only available for *linear* mixed models; returning Wald ddf instead')
-		ddf <- 'Wald'
-	}
-
+	ddf <- check.ddf(object@model,ddf)
 	if (ddf %in% c('Wald','lme4')) {
 		table <- if (inherits(object@model,'lmerModLmerTest')) summary(object@model,ddf='lme4') else summary(object@model)
 		if (ddf == 'Wald') {

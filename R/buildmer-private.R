@@ -117,31 +117,49 @@ calcWald <- function (table,col.ef,col.df=0) {
 	cbind(table,p)
 }
 
-check.ddf <- function (ddf) {
-	if (is.null(ddf)) return('Wald')
-	valid <- c('Wald','lme4','Satterthwaite','Kenward-Roger','KR','S')
+check.ddf <- function (model,ddf) {
+	if (is.null(ddf)) {
+		return('Wald')
+	}
+	valid <- c('Wald','lme4','Satterthwaite','Kenward-Roger','KR')
 	i <- pmatch(ddf,valid)
 	if (is.na(i)) {
 		warning("Invalid ddf specification, possible options are 'Wald', 'lme4', 'Satterthwaite', 'Kenward-Roger'")
-		return('lme4')
+		ddf <- 'lme4'
+	} else {
+		ddf <- valid[i]
+		if ('ddf' == 'KR') {
+			ddf <- 'Kenward-Roger'
+		}
 	}
-	ddf <- valid[i]
-	if (ddf %in% c('Wald','lme4')) return(ddf)
+
+	if (ddf %in% c('Wald','lme4')) {
+		return(ddf)
+	} else {
+		fam <- family(model)$family
+		if (fam %in% c('binomial','poisson')) {
+			warning('Denominator degrees of freedom do not apply to binomial or Poisson models, as those models have a known scale parameter; returning exact ddf instead')
+			return('lme4')
+		}
+		if (startsWith(fam,'Negative Binomial')) {
+			warning('Satterthwaite/Kenward-Roger denominator degrees of freedom are not available for negative binomial models; returning Wald ddf instead')
+			return('lme4') #not Wald!
+		}
+		if (ddf == 'Kenward-Roger') {
+			warning('Kenward-Roger denominator degrees of freedom are only available for *linear* mixed models; returning Wald ddf instead')
+			return('lme4')
+		}
+	}
+
 	if (!requireNamespace('lmerTest',quietly=TRUE)) {
-		warning('lmerTest package is not available, could not calculate requested denominator degrees of freedom')
+		warning('lmerTest package is not available, could not calculate ',ddf,' denominator degrees of freedom')
 		return('lme4')
-	}
-	if (ddf == 'KR') {
-		ddf <- 'Kenward-Roger'
-	}
-	if (ddf == 'S') {
-		ddf <- 'Satterthwaite'
 	}
 	if (ddf == 'Kenward-Roger' && !requireNamespace('pbkrtest',quietly=TRUE)) {
 		warning('pbkrtest package is not available, could not calculate Kenward-Roger denominator degrees of freedom')
 		return('lme4')
 	}
-	return(ddf)
+	ddf
 }
 
 decompose.random.terms <- function (terms) {
