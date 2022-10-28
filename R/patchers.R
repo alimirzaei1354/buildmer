@@ -1,6 +1,6 @@
 callfixup <- function (p,substitute.fun,call,patch.family) {
 	for (x in intersect(NSENAMES,names(p$args))) {
-		call[x] <- p$call$args[[x]] #double [[ because we should not propagate NULLs
+		call[x] <- p$call$args[x]
 	}
 	call[[1]] <- substitute.fun
 	call$data <- p$call$data
