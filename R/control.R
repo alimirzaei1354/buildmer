@@ -159,6 +159,9 @@ buildmer.prep <- function (mc,add,banned) {
 			if (mgcv.wrong) {
 				p$scale.est <- TRUE
 			}
+			if (p$family$family %in% c('binomial','poisson')) {
+				p$scale.est <- FALSE
+			}
 		}
 	}
 	if (is.null(p$crit)) {

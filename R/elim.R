@@ -54,16 +54,13 @@ crit.F <- function (p,ref,alt) {
 	}
 	scale.est <- if (is.na(p$scale.est)) {
 		if ('scale.estimated' %in% names(alt)) {
-			# mgcv sometimes gets it wrong
-			if (p$family$family == 'Multivariate normal') TRUE
-			else if (startsWith(p$family$family,'Negative Binomial')) TRUE
-			else if (startsWith(p$family$family,'Beta regression')) TRUE
-			else if (startsWith(p$family$family,'Scaled t')) TRUE
-			else alt$scale.estimated
+			alt$scale.estimated
 		} else {
-			p$family %in% c('binomial','poisson')
+			TRUE #not special-cased, not binomial or poisson --> true by default
 		}
-	} else p$scale.est
+	} else {
+		p$scale.est
+	}
 	if (scale.est) {
 		stats::pf(Fval,ndf,ddf,lower.tail=FALSE,log.p=TRUE)
 	} else {

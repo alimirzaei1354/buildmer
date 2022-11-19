@@ -143,11 +143,11 @@ check.ddf <- function (model,ddf) {
 		}
 		if (startsWith(fam,'Negative Binomial')) {
 			warning('Satterthwaite/Kenward-Roger denominator degrees of freedom are not available for negative binomial models; returning Wald ddf instead')
-			return('lme4') #not Wald!
+			return('lme4') #not Wald -> glmer.nb already does Wald itself
 		}
-		if (ddf == 'Kenward-Roger') {
-			warning('Kenward-Roger denominator degrees of freedom are only available for *linear* mixed models; returning Wald ddf instead')
-			return('lme4')
+		if (fam != 'gaussian' && ddf == 'Kenward-Roger') {
+			warning('Kenward-Roger denominator degrees of freedom are only available for *linear* mixed models; returning Satterthwaite ddf instead')
+			ddf <- 'Satterthwaite'
 		}
 	}
 
