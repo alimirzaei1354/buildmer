@@ -455,5 +455,7 @@ LRTalpha <- function (alpha) {
 	if (alpha <= 0 || alpha >= 1) {
 		stop("'alpha' should be in (0,1)")
 	}
-	function (logp) exp(logp) >= alpha
+	ret <- function (logp) exp(logp) >= alpha
+	attr(ret,'elim.name') <- 'LRT'
+	ret
 }

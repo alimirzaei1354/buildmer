@@ -19,8 +19,8 @@ NSENAMES <- c('weights','offset','AR.start','control','subset')
 #' @param args Extra arguments passed to the fitting function.
 #' @param cl Specifies a cluster to use for parallelizing the evaluation of terms. This can be an object as returned by function \code{makeCluster} from package \code{parallel}, or a whole number to let buildmer create, manage, and destroy a cluster for you with the specified number of parallel processes.
 #' @param direction Character string or vector indicating the direction for stepwise elimination; possible options are \code{'order'} (order terms by their contribution to the model), \code{'backward'} (backward elimination), \code{'forward'} (forward elimination, implies \code{order}). The default is the combination \code{c('order','backward')}, to first make sure that the model converges and to then perform backward elimination; other such combinations are perfectly allowed.
-#' @param crit Character string or vector determining the criterion used to test terms for their contribution to the model fit in the ordering step. Possible options are \code{'LRT'} (likelihood-ratio test based on chi-square mixtures per Stram & Lee 1994 for random effects; this is the default), \code{'LL'} (use the raw -2 log likelihood), \code{'AIC'} (Akaike Information Criterion), \code{'BIC'} (Bayesian Information Criterion), and \code{'deviance'} (explained deviance -- note that this is not a formal test). If left at its default value of \code{NULL}, the same value is used as in the \code{elim} argument; if that is also \code{NULL}, both are set to \code{'LRT'}.
-#' @param elim Character string or vector determining the criterion used to test terms for elimination in the elimination step. Possible options are \code{'LRT'} (likelihood-ratio test based on chi-square mixtures per Stram & Lee 1994 for random effects; this is the default), \code{'LL'} (use the raw -2 log likelihood), \code{'AIC'} (Akaike Information Criterion), \code{'BIC'} (Bayesian Information Criterion), and \code{'deviance'} (explained deviance --- note that this is not a formal test). If left at its default value of \code{NULL}, the same value is used as in the \code{crit} argument; if that is also \code{NULL}, both are set to \code{'LRT'}.
+#' @param crit Character string or vector determining the criterion used to test terms for their contribution to the model fit in the ordering step. Possible options are \code{'LRT'} (likelihood-ratio test based on chi-square mixtures per Stram & Lee 1994 for random effects; this is the default), \code{'LL'} (use the raw -2 log likelihood), \code{'AIC'} (Akaike Information Criterion), \code{'BIC'} (Bayesian Information Criterion), and \code{'deviance'} (explained deviance -- note that this is not a formal test). If left at its default value of \code{NULL}, the same value is used as in the \code{elim} argument; if that is also \code{NULL}, both are set to \code{'LRT'}. If \code{crit} is a function, it may optionally have an \code{crit.name} attribute, which will be used as its name in buildmer. This is used to guide the code checking for mismatches between \code{crit} and \code{elim} arguments.
+#' @param elim Character string or vector determining the criterion used to test terms for elimination in the elimination step. Possible options are \code{'LRT'} (likelihood-ratio test based on chi-square mixtures per Stram & Lee 1994 for random effects; this is the default), \code{'LL'} (use the raw -2 log likelihood), \code{'AIC'} (Akaike Information Criterion), \code{'BIC'} (Bayesian Information Criterion), and \code{'deviance'} (explained deviance --- note that this is not a formal test). If left at its default value of \code{NULL}, the same value is used as in the \code{crit} argument; if that is also \code{NULL}, both are set to \code{'LRT'}. If \code{elim} is a function, it may optionally have an \code{elim.name} attribute, which will be used as its name in buildmer. This is used to guide the code checking for mismatches between \code{crit} and \code{elim} arguments.
 #' @param fit Internal parameter --- do not modify.
 #' @param include A one-sided formula or character vector of terms that will be included in the model at all times and are not subject to testing for elimination. These do not need to be specified separately in the \code{formula} argument. Useful for e.g. passing correlation structures in \code{glmmTMB} models.
 #' @param quiet A logical indicating whether to suppress progress messages.
@@ -186,13 +186,17 @@ buildmer.prep <- function (mc,add,banned) {
 		}
 	}
 	if (is.function(p$crit)) {
-		p$crit.name <- 'custom'
+		if (is.null(p$crit.name <- attr(p$crit,'name'))) {
+			p$crit.name <- 'custom'
+		}
 	} else {
 		p$crit.name <- p$crit
 		p$crit <- get(paste0('crit.',p$crit)) #no env, because we want it from buildmer's namespace
 	}
 	if (is.function(p$elim)) {
-		p$elim.name <- 'custom'
+		if (is.null(p$elim.name <- attr(p$elim,'name'))) {
+			p$elim.name <- 'custom'
+		}
 	} else {
 		p$elim.name <- p$elim
 		p$elim <- get(paste0('elim.',p$elim))
